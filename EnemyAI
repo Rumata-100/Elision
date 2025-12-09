@@ -1,0 +1,64 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine.AI;
+using Elision.Utils;
+public class EnemyAI : MonoBehaviour   //если что смотри видос: "2D Top Down игра на Unity с нуля #7"
+{
+    [SerializeField] private State startingState;
+    [SerializeField] private float  roamingDistanceMax = 7f; //Максимальная дистанция
+    [SerializeField] private float  roamingDistanceMin = 3f; //Минимальная дистанция
+    [SerializeField] private float  roamingTimerMax = 2f; //Время в течении которого будет двигаться объект
+
+    private NavMeshAgent navMeshAgent; //агент в NavMesh чтоб использовать его логику
+    private State state; //локальная переменная в которой мы храним текущ.состояние нашего объекта
+    private float roamingTime;
+    private Vector3 roamPosition;
+    private Vector3 startingPosition;
+    private enum State //машина состояний
+    {
+        Idle,
+        Roaming
+
+    }
+    private void Start()
+    {
+        startingPosition = transform.position;
+    }
+
+private void Awake() //функция Awake
+    {
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        navMeshAgent.updatePosition = false; //чтоб объект не вращался на месте
+        navMeshAgent.updateUpAxis = false; //чтоб орентация нашего navMesh не влиял на орентацию нашего объекта
+        state = startingState;
+    }
+
+    private void Update() //поведение состоянии
+    {
+        switch (state)
+        {
+            default:             
+            case State.Idle:
+            break;
+            case State.Roaming:
+            roamingTime-=Time.deltaTime; //Time.deltaTime - то время через которое проходит между фреймами
+            if(roamingTime < 0)
+                {
+                    Roaming();
+                    roamingTime = roamingTimerMax;
+                }
+            break;
+        }
+    }
+private void Roaming()
+    {
+        roamPosition = GetRoamingPosition();   
+        navMeshAgent.SetDestination(roamPosition);
+    } 
+private Vector3 GetRoamingPosition()
+    {
+        return startingPosition + Utils.GetRandomDir() * UnityEngine.Random.Range(roamingDistanceMin, roamingDistanceMax);
+    }
+}
